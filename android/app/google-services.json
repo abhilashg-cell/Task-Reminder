@@ -1,0 +1,39 @@
+{
+    "project_info": {
+        "project_number": "600214373098",
+        "project_id": "task-reminder-69ca7",
+        "storage_bucket": "task-reminder-69ca7.firebasestorage.app"
+    },
+    "client": [
+        {
+            "client_info": {
+                "mobilesdk_app_id": "1:600214373098:android:1d91ef05ef03dbe4dfcd93",
+                "android_client_info": {
+                    "package_name": "com.example.smartreminder"
+                }
+            },
+            "oauth_client": [
+                {
+                    "client_id": "600214373098-gsfi6ppkmd79cuqdgqaiv001vvqasn13.apps.googleusercontent.com",
+                    "client_type": 3
+                }
+            ],
+            "api_key": [
+                {
+                    "current_key": "AIzaSyCQ0_l2J7_uCcpm8-cqxVwGgZ_DYoDs8z4"
+                }
+            ],
+            "services": {
+                "appinvite_service": {
+                    "other_platform_oauth_client": [
+                        {
+                            "client_id": "600214373098-gsfi6ppkmd79cuqdgqaiv001vvqasn13.apps.googleusercontent.com",
+                            "client_type": 3
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "configuration_version": "1"
+}

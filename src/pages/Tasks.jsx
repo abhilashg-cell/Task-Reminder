@@ -1,14 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { db } from '../firebase';
-import { collection, addDoc, query, where, onSnapshot, orderBy, serverTimestamp, deleteDoc, doc } from 'firebase/firestore';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState } from 'react';
+import { useTasks } from '../hooks/useTasks'; // Centralized hook
 import { format, parseISO } from 'date-fns';
-import { FaTrash, FaCheckCircle, FaRegCircle } from 'react-icons/fa';
+import { FaTrash, FaPlus, FaTimes } from 'react-icons/fa';
 
 export default function Tasks() {
-    const { currentUser } = useAuth();
-    const [tasks, setTasks] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { tasks, loading, addTask, deleteTask } = useTasks();
     const [newTask, setNewTask] = useState({
         title: '',
         description: '',
@@ -17,41 +13,17 @@ export default function Tasks() {
     });
     const [isFormOpen, setIsFormOpen] = useState(false);
 
-    useEffect(() => {
-        if (!currentUser) return;
-
-        const q = query(
-            collection(db, 'tasks'),
-            where('userId', '==', currentUser.uid),
-            orderBy('date', 'asc'),
-            orderBy('time', 'asc')
-        );
-
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const taskList = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            setTasks(taskList);
-            setLoading(false);
-        });
-
-        return unsubscribe;
-    }, [currentUser]);
+    // No local useEffect for fetching anymore!
 
     async function handleAddTask(e) {
         e.preventDefault();
-        if (!currentUser) return;
 
         try {
-            await addDoc(collection(db, 'tasks'), {
-                userId: currentUser.uid,
+            await addTask({
                 title: newTask.title,
                 description: newTask.description,
                 date: newTask.date,
-                time: newTask.time,
-                createdAt: serverTimestamp(),
-                completed: false
+                time: newTask.time
             });
 
             setNewTask({
@@ -63,12 +35,18 @@ export default function Tasks() {
             setIsFormOpen(false);
         } catch (error) {
             console.error("Error adding task: ", error);
+            alert("Failed to add task. Please try again.");
         }
     }
 
-    async function deleteTask(id) {
+    async function handleDeleteTask(id) {
         if (window.confirm("Are you sure you want to delete this task?")) {
-            await deleteDoc(doc(db, 'tasks', id));
+            try {
+                await deleteTask(id);
+            } catch (error) {
+                console.error("Error deleting task: ", error);
+                alert("Failed to delete task.");
+            }
         }
     }
 
@@ -76,58 +54,84 @@ export default function Tasks() {
         <div className="container">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <h2>My Tasks</h2>
-                <button
-                    className="btn"
-                    onClick={() => setIsFormOpen(!isFormOpen)}
-                    style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
-                >
-                    {isFormOpen ? 'Close' : 'Add Task'}
-                </button>
             </div>
 
             {isFormOpen && (
-                <form onSubmit={handleAddTask} className="card" style={{ marginBottom: '1.5rem', border: '1px solid var(--accent-primary)' }}>
-                    <h3 style={{ marginBottom: '1rem' }}>New Task</h3>
-                    <input
-                        className="input"
-                        type="text"
-                        placeholder="Task Title (e.g., Party)"
-                        value={newTask.title}
-                        onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                        required
-                    />
-                    <textarea
-                        className="input"
-                        placeholder="Description (Location, etc.)"
-                        value={newTask.description}
-                        onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                        rows="3"
-                        style={{ fontFamily: 'inherit' }}
-                    />
-                    <div style={{ display: 'flex', gap: '1rem' }}>
-                        <div style={{ flex: 1 }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Date</label>
-                            <input
-                                className="input"
-                                type="date"
-                                value={newTask.date}
-                                onChange={(e) => setNewTask({ ...newTask, date: e.target.value })}
-                                required
-                            />
+                <div style={{
+                    position: 'fixed',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.8)',
+                    zIndex: 1000,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '1rem'
+                }} onClick={() => setIsFormOpen(false)}>
+                    <form
+                        onSubmit={handleAddTask}
+                        className="card"
+                        style={{
+                            width: '100%',
+                            maxWidth: '500px',
+                            border: '1px solid var(--accent-primary)',
+                            margin: 0,
+                            maxHeight: '90vh',
+                            overflowY: 'auto'
+                        }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                            <h3 style={{ margin: 0 }}>New Task</h3>
+                            <button
+                                type="button"
+                                onClick={() => setIsFormOpen(false)}
+                                style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', fontSize: '1.2rem', cursor: 'pointer' }}
+                            >
+                                <FaTimes />
+                            </button>
                         </div>
-                        <div style={{ flex: 1 }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Time</label>
-                            <input
-                                className="input"
-                                type="time"
-                                value={newTask.time}
-                                onChange={(e) => setNewTask({ ...newTask, time: e.target.value })}
-                                required
-                            />
+
+                        <input
+                            className="input"
+                            type="text"
+                            placeholder="Task Title (e.g., Party)"
+                            value={newTask.title}
+                            onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                            required
+                        />
+                        <textarea
+                            className="input"
+                            placeholder="Description (Location, etc.)"
+                            value={newTask.description}
+                            onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                            rows="3"
+                            style={{ fontFamily: 'inherit' }}
+                        />
+                        <div style={{ display: 'flex', gap: '1rem' }}>
+                            <div style={{ flex: 1 }}>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Date</label>
+                                <input
+                                    className="input"
+                                    type="date"
+                                    value={newTask.date}
+                                    onChange={(e) => setNewTask({ ...newTask, date: e.target.value })}
+                                    required
+                                />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Time</label>
+                                <input
+                                    className="input"
+                                    type="time"
+                                    value={newTask.time}
+                                    onChange={(e) => setNewTask({ ...newTask, time: e.target.value })}
+                                    required
+                                />
+                            </div>
                         </div>
-                    </div>
-                    <button type="submit" className="btn" style={{ width: '100%' }}>Save Task</button>
-                </form>
+                        <button type="submit" className="btn" style={{ width: '100%' }}>Save Task</button>
+                    </form>
+                </div>
             )}
 
             {loading ? (
@@ -150,7 +154,7 @@ export default function Tasks() {
                                 </div>
                             </div>
                             <button
-                                onClick={() => deleteTask(task.id)}
+                                onClick={() => handleDeleteTask(task.id)}
                                 style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: '0.5rem' }}
                             >
                                 <FaTrash />
@@ -159,6 +163,32 @@ export default function Tasks() {
                     ))}
                 </div>
             )}
+
+
+            {/* FAB */}
+            <button
+                onClick={() => setIsFormOpen(true)}
+                style={{
+                    position: 'fixed',
+                    bottom: '80px', // Above bottom nav if present, or simply accessible
+                    right: '25px',
+                    width: '56px',
+                    height: '56px',
+                    borderRadius: '50%',
+                    backgroundColor: 'var(--accent-primary)',
+                    color: 'white',
+                    border: 'none',
+                    boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.5rem',
+                    cursor: 'pointer',
+                    zIndex: 900
+                }}
+            >
+                <FaPlus />
+            </button>
         </div>
     );
 }

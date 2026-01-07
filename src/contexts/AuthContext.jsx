@@ -5,7 +5,8 @@ import {
     signInWithPopup,
     signOut,
     createUserWithEmailAndPassword,
-    signInWithEmailAndPassword
+    signInWithEmailAndPassword,
+    sendEmailVerification
 } from "firebase/auth";
 import { auth, db } from "../firebase"; // Adjust path if needed
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
@@ -23,6 +24,13 @@ export function AuthProvider({ children }) {
     async function signup(email, password, name) {
         const result = await createUserWithEmailAndPassword(auth, email, password);
         const user = result.user;
+
+        // Send verification email
+        try {
+            await sendEmailVerification(user);
+        } catch (e) {
+            console.error("Failed to send verification email:", e);
+        }
 
         // Create user document
         await setDoc(doc(db, "users", user.uid), {

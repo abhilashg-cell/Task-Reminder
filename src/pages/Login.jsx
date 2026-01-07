@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
-    const { loginGoogle, loginWithEmail, signup } = useAuth();
+    const { loginGoogle, loginWithEmail, signup, logout } = useAuth();
     const navigate = useNavigate();
 
     const [isLogin, setIsLogin] = useState(true);
@@ -20,11 +20,22 @@ export default function Login() {
 
         try {
             if (isLogin) {
-                await loginWithEmail(email, password);
+                const credential = await loginWithEmail(email, password);
+                if (!credential.user.emailVerified) {
+                    setError('Please verify your email before logging in. Check your inbox.');
+                    // Force logout so they aren't authenticated in the background
+                    logout();
+                    setLoading(false);
+                    return;
+                }
+                navigate('/calendar');
             } else {
                 await signup(email, password, name);
+                // Switch to login and show message
+                setIsLogin(true);
+                setError('Account created! A verification email has been sent. Please verify before logging in.');
+                // Don't navigate yet, let them check email
             }
-            navigate('/calendar');
         } catch (err) {
             setError(err.message.replace('Firebase: ', ''));
         } finally {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -37,5 +37,30 @@ export function useTasks() {
         return unsubscribe;
     }, [currentUser]);
 
-    return { tasks, loading };
+    const addTask = async (taskData) => {
+        if (!currentUser) return;
+        try {
+            await addDoc(collection(db, 'tasks'), {
+                userId: currentUser.uid,
+                ...taskData,
+                createdAt: serverTimestamp(),
+                completed: false
+            });
+        } catch (error) {
+            console.error("Error adding task:", error);
+            throw error;
+        }
+    };
+
+    const deleteTask = async (id) => {
+        if (!currentUser) return;
+        try {
+            await deleteDoc(doc(db, 'tasks', id));
+        } catch (error) {
+            console.error("Error deleting task:", error);
+            throw error;
+        }
+    };
+
+    return { tasks, loading, addTask, deleteTask };
 }

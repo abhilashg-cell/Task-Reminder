@@ -70,23 +70,28 @@ export default function Calendar() {
                                 justifyContent: 'center',
                                 cursor: 'pointer',
                                 position: 'relative',
-                                backgroundColor: isSelected ? 'rgba(255,255,255,0.1)' : 'transparent',
-                                color: !isCurrentMonth ? '#444' : isTodayDate ? 'var(--accent-primary)' : 'var(--text-primary)',
-                                fontWeight: isTodayDate ? 'bold' : 'normal',
-                                border: isTodayDate ? '1px solid var(--accent-primary)' : 'none'
+                                backgroundColor: hasTasks
+                                    ? 'var(--accent-primary)'
+                                    : isSelected
+                                        ? 'rgba(255,255,255,0.1)'
+                                        : 'transparent',
+                                color: hasTasks
+                                    ? '#ffffff'
+                                    : !isCurrentMonth
+                                        ? '#444'
+                                        : isTodayDate
+                                            ? 'var(--accent-primary)'
+                                            : 'var(--text-primary)',
+                                fontWeight: (isTodayDate || hasTasks) ? 'bold' : 'normal',
+                                border: isSelected
+                                    ? '2px solid var(--text-primary)'
+                                    : isTodayDate && !hasTasks
+                                        ? '1px solid var(--accent-primary)'
+                                        : '2px solid transparent', // Maintain layout stability
+                                transition: 'all 0.2s ease'
                             }}
                         >
                             {format(day, 'd')}
-                            {hasTasks && (
-                                <div style={{
-                                    position: 'absolute',
-                                    bottom: '15%',
-                                    width: '4px',
-                                    height: '4px',
-                                    borderRadius: '50%',
-                                    backgroundColor: 'var(--accent-secondary)'
-                                }}></div>
-                            )}
                         </div>
                     );
                 })}

@@ -4,13 +4,16 @@
   --bg-secondary: #1E1E1E;
   --text-primary: #F8FAFC;
   --text-secondary: #94A3B8;
-  --accent-primary: #8B5CF6; /* Violet */
-  --accent-secondary: #10B981; /* Emerald */
+  --accent-primary: #8B5CF6;
+  /* Violet */
+  --accent-secondary: #10B981;
+  /* Emerald */
   --danger: #EF4444;
 
   /* Spacing & Layout */
   --nav-height: 60px;
-  --max-width: 600px; /* Mobile-first focus, but centers on desktop */
+  --max-width: 600px;
+  /* Mobile-first focus, but centers on desktop */
 }
 
 * {
@@ -25,6 +28,18 @@ body {
   color: var(--text-primary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.light-mode {
+  --bg-primary: #F1F5F9;
+  --bg-secondary: #FFFFFF;
+  --text-primary: #1E293B;
+  --text-secondary: #64748B;
+  /* Keep accents similar but maybe adjust for contrast if needed, 
+     but standard Violet/Emerald usually works on white too. 
+     Let's darken accent-primary slightly for text contrast if needed? 
+     For now, keep same for brand consistency. */
 }
 
 #root {
